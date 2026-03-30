@@ -125,8 +125,8 @@ mnist_test_data = datasets.MNIST(root='./raw_data', train=False, transform=trans
 mnist_train_loader = DataLoader(mnist_train_data, batch_size=bs, shuffle=True)
 mnist_test_loader = DataLoader(mnist_test_data, batch_size=bs, shuffle=False)
 
-cifar_train_set = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-cifar_test_set = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+cifar_train_set = datasets.CIFAR10(root='./raw_data', train=True, download=True, transform=transform)
+cifar_test_set = datasets.CIFAR10(root='./raw_data', train=False, download=True, transform=transform)
 
 cifar_train_loader = DataLoader(cifar_train_set, batch_size=128, shuffle=True, num_workers=2)
 cifar_test_loader = DataLoader(cifar_test_set, batch_size=128, shuffle=False, num_workers=2)
