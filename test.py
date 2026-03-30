@@ -1,12 +1,15 @@
+import os
+
 import torch
 import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
-
+import matplotlib.pyplot as plt
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-bs = 64
+os.makedirs("./results", exist_ok=True)
+bs = 256
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -79,19 +82,19 @@ class MNISTCNN(nn.Module):
 class CIFARCNN(nn.Module):
     def __init__(self):
         super(CIFARCNN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(3, 32, 3, 1)
         self.bn1 = nn.BatchNorm2d(32)
-        self.conv2 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 32, 3, 1)
         self.bn2 = nn.BatchNorm2d(32)
         
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(32, 64, 3, 1)
         self.bn3 = nn.BatchNorm2d(64)
-        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(64, 64, 3, 1)
         self.bn4 = nn.BatchNorm2d(64)
         
-        self.conv5 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.conv5 = nn.Conv2d(64, 128, 3, 1)
         self.bn5 = nn.BatchNorm2d(128)
-        self.conv6 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.conv6 = nn.Conv2d(128, 128, 3, 1)
         self.bn6 = nn.BatchNorm2d(128)
         
         self.pool = nn.MaxPool2d(2, 2)
@@ -101,19 +104,16 @@ class CIFARCNN(nn.Module):
         self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
-        # Block 1
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = self.pool(x)
         x = self.dropout(x)
         
-        # Block 2
         x = F.relu(self.bn3(self.conv3(x)))
         x = F.relu(self.bn4(self.conv4(x)))
         x = self.pool(x)
         x = self.dropout(x)
         
-        # Block 3
         x = F.relu(self.bn5(self.conv5(x)))
         x = F.relu(self.bn6(self.conv6(x)))
         x = self.pool(x)
@@ -146,3 +146,25 @@ train_model(model = MnistCNN, train_loader = mnist_train_loader, test_loader = m
 
 cifarCNN = CIFARCNN().to(device)
 train_model(model = cifarCNN, train_loader = cifar_train_loader, test_loader = cifar_test_loader, device = device, epochs = 10, save_path = "./models/cifar_resnet18.pth")
+
+import torch
+import torch.nn as nn
+
+def fgsm_targeted(model, x, target, eps):
+    x_adv = x.clone().detach()
+    x_adv.requires_grad = True
+
+    outputs = model(x_adv)
+
+    criterion = nn.CrossEntropyLoss()
+    loss = criterion(outputs, target)
+
+    model.zero_grad()
+    loss.backward()
+    data_grad = x_adv.grad.data
+    sign_data_grad = data_grad.sign()
+    
+    x_adv -= eps * sign_data_grad
+    x_adv = torch.clamp(x_adv, 0, 1)
+
+    return x_adv.detach()
