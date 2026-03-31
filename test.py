@@ -242,12 +242,10 @@ def attack_visualization(orig, adv, orig_label, adv_label, attack_name, dataset_
     orig_np = orig.squeeze().cpu().detach().numpy()
     adv_np = adv.squeeze().cpu().detach().numpy()
     
-    perturbation = adv_np - orig_np # 섭동 연산
+    perturbation = adv_np - orig_np
     
-    if np.max(np.abs(perturbation)) > 0:
-        pert_display = (perturbation - perturbation.min()) / (perturbation.max() - perturbation.min())
-    else:
-        pert_display = perturbation
+    pert_display = 0.5 + perturbation
+    pert_display = np.clip(pert_display, 0, 1)
 
     if len(orig_np.shape) == 3:
         orig_display = np.transpose(orig_np, (1, 2, 0))
@@ -269,7 +267,7 @@ def attack_visualization(orig, adv, orig_label, adv_label, attack_name, dataset_
     axes[1].axis('off')
     
     axes[2].imshow(pert_display, cmap='gray' if len(orig_np.shape)==2 else None)
-    axes[2].set_title(f"Perturbation (Eps: {eps})")
+    axes[2].set_title(f"True Perturbation (Eps: {eps})")
     axes[2].axis('off')
     
     plt.tight_layout()
